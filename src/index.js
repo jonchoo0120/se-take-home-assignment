@@ -183,57 +183,57 @@ function printFinalStatus() {
 }
 
 //CLI
-const readline = require("readline");
+// const readline = require("readline");
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+// const rl = readline.createInterface({
+//   input: process.stdin,
+//   output: process.stdout,
+// });
 
-console.log("Type command: new vip | new normal | +bot | -bot");
+// console.log("Type command: new vip | new normal | +bot | -bot");
 
-rl.on("line", (input) => {
-  const command = input.trim().toLowerCase();
+// rl.on("line", (input) => {
+//   const command = input.trim().toLowerCase();
 
-  if (command === "new vip") {
-    createVipOrder();
-  }
+//   if (command === "new vip") {
+//     createVipOrder();
+//   }
 
-  else if (command === "new normal") {
-    createNormalOrder();
-  }
+//   else if (command === "new normal") {
+//     createNormalOrder();
+//   }
 
-  else if (command === "+bot") {
-    addBot();
-  }
+//   else if (command === "+bot") {
+//     addBot();
+//   }
 
-  else if (command === "-bot") {
-    removeBot();
-  }
+//   else if (command === "-bot") {
+//     removeBot();
+//   }
 
-  else {
-    log(`Unknown command: ${input}`);
-  }
+//   else {
+//     log(`Unknown command: ${input}`);
+//   }
 
-  printState();
-});
+//   printState();
+// });
 
-function printState() {
-  console.log("\n===== STATE =====");
+// function printState() {
+//   console.log("\n===== STATE =====");
 
-  console.log("VIP:", vipQueue.map(o => o.id));
-  console.log("Normal:", normalQueue.map(o => o.id));
-  console.log("Processing:", processingQueue.map(o => o.id));
-  console.log("Completed:", completedOrders.map(o => o.id));
+//   console.log("VIP:", vipQueue.map(o => o.id));
+//   console.log("Normal:", normalQueue.map(o => o.id));
+//   console.log("Processing:", processingQueue.map(o => o.id));
+//   console.log("Completed:", completedOrders.map(o => o.id));
 
-  console.log("Bots:", bots.map(b => ({
-    id: b.id,
-    status: b.status,
-    currentOrder: b.currentOrder?.id || null
-  })));
+//   console.log("Bots:", bots.map(b => ({
+//     id: b.id,
+//     status: b.status,
+//     currentOrder: b.currentOrder?.id || null
+//   })));
 
-  console.log("================\n");
-}
+//   console.log("================\n");
+// }
 
 function runSimulation() {
   writePlain(`McDonald's Order Management System - Simulation Results\n`);
