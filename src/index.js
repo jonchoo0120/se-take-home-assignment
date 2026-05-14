@@ -11,10 +11,7 @@ let completedOrders = [];
 
 let bots = [];
 
-//Ini system
-log(`System initialized with ${bots.length} bots`);
-
-//Bots logic
+//Bot
 function getNextOrder(vipQueue, normalQueue) {
   if (vipQueue.length > 0) {
     return vipQueue.shift();
@@ -76,7 +73,7 @@ function assignOrdersToBots() {
   }
 }
 
-//functions
+//Order
 function createVipOrder() {
   const order = {
     id: orderId++,
@@ -238,15 +235,45 @@ function printState() {
   console.log("================\n");
 }
 
-// function runSimulation() {
-//   addBot();
-//   createVipOrder();
-//   createNormalOrder();
+function runSimulation() {
+  writePlain(`McDonald's Order Management System - Simulation Results\n`);
+  log(`System initialized with ${bots.length} bots`);
 
-//   setTimeout(() => {
-//     printFinalStatus();
-//     process.exit(0);
-//   }, 25000);
-// }
+  createNormalOrder(); 
+  createVipOrder();    
+  createNormalOrder(); 
 
-// runSimulation();
+  setTimeout(() => {
+    addBot(); // Bot 1 picks VIP #2
+  }, 1000);
+
+  setTimeout(() => {
+    addBot(); // Bot 2 picks Normal #1
+  }, 2000);
+
+  setTimeout(() => {
+    createVipOrder(); 
+  }, 5000);
+
+  setTimeout(() => {
+    createNormalOrder(); 
+  }, 6000);
+
+  setTimeout(() => {
+    removeBot(); 
+    // remove newest bot while processing
+    // order should return to queue
+  }, 8000);
+
+  setTimeout(() => {
+    addBot();
+    // new bot should continue pending orders
+  }, 12000);
+
+  setTimeout(() => {
+    printFinalStatus();
+    process.exit(0);
+  }, 40000);
+}
+
+runSimulation();
