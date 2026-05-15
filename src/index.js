@@ -1,157 +1,22 @@
 const { log, writePlain } = require("./logger");
+const readline = require("readline");
 
-let orderId = 1;
-let botId = 1;
-
-let vipQueue = [];
-let normalQueue = [];
-
-let processingQueue = [];
-let completedOrders = [];
-
-let bots = [];
-
-//Bot
-function getNextOrder(vipQueue, normalQueue) {
-  if (vipQueue.length > 0) {
-    return vipQueue.shift();
-  }
-
-  if (normalQueue.length > 0) {
-    return normalQueue.shift();
-  }
-
-  return null;
-}
-
-function startBot(bot) {
-  const order = getNextOrder(vipQueue, normalQueue);
-
-  if (!order) {
-    log(`Bot #${bot.id} is now IDLE - No pending orders`);
-    bot.status = "IDLE";
-
-    return;
-  }
-
-  bot.status = "PROCESSING";
-  bot.currentOrder = order;
-
-  order.status = "PROCESSING";
-  processingQueue.push(order);
-
-  log(`Bot #${bot.id} picked up ${order.type} Order #${order.id} - Status: PROCESSING`);
-
-  bot.timer = setTimeout(() => {
-    completeOrder(bot);
-  }, 10000);
-}
-
-function completeOrder(bot) {
-  const order = bot.currentOrder;
-
-  // remove from processing
-  processingQueue = processingQueue.filter(o => o.id !== order.id);
-
-  order.status = "COMPLETE";
-  completedOrders.push(order);
-
-  log(`Bot #${bot.id} completed ${order.type} Order #${order.id} - Status: COMPLETE (Processing time: 10s)`);
-
-  bot.status = "IDLE";
-  bot.currentOrder = null;
-
-  // auto pick next order
-  startBot(bot);
-}
-
-function assignOrdersToBots() {
-  for (let bot of bots) {
-    if (bot.status === "IDLE") {
-      startBot(bot);
-    }
-  }
-}
-
-//Order
-function createVipOrder() {
-  const order = {
-    id: orderId++,
-    type: "VIP",
-    status: "PENDING",
-  };
-
-  vipQueue.push(order);
-
-  log(`Created VIP Order #${order.id} - Status: PENDING`);
-
-  assignOrdersToBots();
-}
-
-function createNormalOrder() {
-  const order = {
-    id: orderId++,
-    type: "NORMAL",
-    status: "PENDING",
-  };
-
-  normalQueue.push(order);
-
-  log(`Created Normal Order #${order.id} - Status: PENDING`);
-
-  assignOrdersToBots();
-}
-
-function addBot() {
-  const bot = {
-    id: botId++,
-    status: "IDLE",
-    currentOrder: null,
-    timer: null,
-  };
-
-  bots.push(bot);
-
-  log(`Bot #${bot.id} created - Status: ACTIVE`);
-
-  assignOrdersToBots();
-}
-
-function removeBot() {
-  const bot = bots.pop();
-
-  if (!bot) {
-    log("No bot to remove");
-    return;
-  }
-
-  if (bot.timer) {
-    clearTimeout(bot.timer);
-
-    if (bot.currentOrder) {
-      const order = bot.currentOrder;
-
-      // REMOVE from processing queue
-      processingQueue = processingQueue.filter(
-        o => o.id !== order.id
-      );
-
-      order.status = "PENDING";
-
-      if (order.type === "VIP") {
-        vipQueue.unshift(order);
-      } else {
-        normalQueue.unshift(order);
-      }
-
-      log(`Order #${order.id} returned to queue`);
-    }
-  }
-
-  log(`Bot #${bot.id} removed`);
-}
+const {
+  createVipOrder,
+  createNormalOrder,
+  addBot,
+  removeBot,
+  getState,
+} = require("./botController");
 
 function printFinalStatus() {
+  const {
+    completedOrders,
+    vipQueue,
+    normalQueue,
+    bots,
+  } = getState();
+
   const vipCompleted = completedOrders.filter(
     o => o.type === "VIP"
   ).length;
@@ -182,15 +47,75 @@ function printFinalStatus() {
   );
 }
 
-//CLI
-// const readline = require("readline");
+function runSimulation() {
+  writePlain(
+    "McDonald's Order Management System\n"
+  );
 
+  createNormalOrder();
+  createVipOrder();
+  createNormalOrder();
+
+  setTimeout(() => {
+    addBot();
+  }, 1000);
+
+  setTimeout(() => {
+    addBot();
+  }, 2000);
+
+  setTimeout(() => {
+    createVipOrder();
+  }, 5000);
+
+  setTimeout(() => {
+    removeBot();
+  }, 8000);
+
+  setTimeout(() => {
+    addBot();
+  }, 12000);
+
+  setTimeout(() => {
+    printFinalStatus();
+    process.exit(0);
+  }, 40000);
+}
+
+runSimulation();
+
+function printState() {
+  const state = getState();
+
+  console.log("\n===== CURRENT STATE =====");
+
+  console.log("VIP Queue:", state.vipQueue.map(o => o.id));
+  console.log("Normal Queue:", state.normalQueue.map(o => o.id));
+
+  console.log("Processing:", state.processingQueue.map(o => ({
+    id: o.id,
+    type: o.type
+  })));
+
+  console.log("Completed:", state.completedOrders.map(o => o.id));
+
+  console.log("Bots:", state.bots.map(b => ({
+    id: b.id,
+    status: b.status,
+    currentOrder: b.currentOrder?.id || null
+  })));
+
+  console.log("=========================\n");
+}
+
+
+//CLI
 // const rl = readline.createInterface({
 //   input: process.stdin,
 //   output: process.stdout,
 // });
 
-// console.log("Type command: new vip | new normal | +bot | -bot");
+// console.log("Commands: new vip | new normal | +bot | -bot | exit");
 
 // rl.on("line", (input) => {
 //   const command = input.trim().toLowerCase();
@@ -211,69 +136,14 @@ function printFinalStatus() {
 //     removeBot();
 //   }
 
+//   else if (command === "exit") {
+//     rl.close();
+//     process.exit(0);
+//   }
+
 //   else {
-//     log(`Unknown command: ${input}`);
+//     console.log("Unknown command");
 //   }
 
 //   printState();
 // });
-
-// function printState() {
-//   console.log("\n===== STATE =====");
-
-//   console.log("VIP:", vipQueue.map(o => o.id));
-//   console.log("Normal:", normalQueue.map(o => o.id));
-//   console.log("Processing:", processingQueue.map(o => o.id));
-//   console.log("Completed:", completedOrders.map(o => o.id));
-
-//   console.log("Bots:", bots.map(b => ({
-//     id: b.id,
-//     status: b.status,
-//     currentOrder: b.currentOrder?.id || null
-//   })));
-
-//   console.log("================\n");
-// }
-
-function runSimulation() {
-  writePlain(`McDonald's Order Management System - Simulation Results\n`);
-  log(`System initialized with ${bots.length} bots`);
-
-  createNormalOrder(); 
-  createVipOrder();    
-  createNormalOrder(); 
-
-  setTimeout(() => {
-    addBot(); // Bot 1 picks VIP #2
-  }, 1000);
-
-  setTimeout(() => {
-    addBot(); // Bot 2 picks Normal #1
-  }, 2000);
-
-  setTimeout(() => {
-    createVipOrder(); 
-  }, 5000);
-
-  setTimeout(() => {
-    createNormalOrder(); 
-  }, 6000);
-
-  setTimeout(() => {
-    removeBot(); 
-    // remove newest bot while processing
-    // order should return to queue
-  }, 8000);
-
-  setTimeout(() => {
-    addBot();
-    // new bot should continue pending orders
-  }, 12000);
-
-  setTimeout(() => {
-    printFinalStatus();
-    process.exit(0);
-  }, 40000);
-}
-
-runSimulation();

@@ -2,6 +2,6 @@
 
 echo "Running tests..."
 
-echo "No automated tests implemented"
+npm test
 
 echo "Tests completed"
