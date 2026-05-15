@@ -136,6 +136,8 @@ function addBot() {
 
   bots.push(bot);
 
+  log(`Bot #${bot.id} created - Status: ACTIVE`);
+
   assignOrdersToBots();
 
   return bot;

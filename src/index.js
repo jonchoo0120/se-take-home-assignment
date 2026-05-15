@@ -52,6 +52,8 @@ function runSimulation() {
     "McDonald's Order Management System\n"
   );
 
+  log("System initialized with 0 bots");
+
   createNormalOrder();
   createVipOrder();
   createNormalOrder();
